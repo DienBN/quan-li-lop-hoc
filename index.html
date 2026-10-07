@@ -402,18 +402,46 @@
         background-color: #f1f5f9 !important;
     }
 
-    /* Bổ sung: Cho phép bấm vào ô nhập mật khẩu của hộp thoại đăng nhập */
+    /* Cho phép tuyệt đối hộp thoại đăng nhập hoạt động khi đang ở chế độ Khách.
+       Không để CSS khóa trang vô tình chặn click/focus ô mật khẩu trên PC/mobile. */
+    body.guest-mode .swal2-container,
+    body.guest-mode .swal2-popup,
+    body.guest-mode .swal2-container,
+    body.guest-mode .swal2-popup,
+    body.guest-mode .swal2-input,
+    body.guest-mode .swal2-textarea,
+    body.guest-mode .swal2-actions,
+    body.guest-mode .swal2-confirm,
+    body.guest-mode .swal2-cancel {
+        pointer-events: auto !important;
+    }
+
+    /* QUAN TRỌNG: SweetAlert nằm ngoài #appContent nhưng vẫn là con của body.
+       Khi protected-view bật, tuyệt đối không áp luật pointer-events:none lên ô mật khẩu. */
+    body.protected-view .swal2-container,
+    body.protected-view .swal2-popup,
+    body.protected-view .swal2-input,
+    body.protected-view .swal2-actions,
+    body.protected-view .swal2-confirm,
+    body.protected-view .swal2-cancel {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+    }
+
     body.guest-mode .swal2-input,
     body.guest-mode .swal2-textarea {
-        pointer-events: auto !important;
         background-color: #fff !important;
+        color: #111827 !important;
+        opacity: 1 !important;
         user-select: text !important;
         -webkit-user-select: text !important;
+        -webkit-appearance: none !important;
+        touch-action: manipulation !important;
     }
 
     /* --- CHẾ ĐỘ KHÓA BẢO VỆ TUYỆT ĐỐI: CHỈ XEM --- */
-    body.protected-view input:not([type="search"]):not([type="text"][id*="Search"]),
-    body.protected-view input[type="file"],
+    body.protected-view input:not([type="search"]):not([type="text"][id*="Search"]):not(.swal2-input),
+    body.protected-view input[type="file"]:not(.swal2-input),
     body.protected-view textarea:not(.swal2-textarea),
     body.protected-view .grade-input,
     body.protected-view [contenteditable="true"],
@@ -2426,11 +2454,27 @@ async function promptAdminLogin() {
         text: 'Nhập mật khẩu Giáo viên để chỉnh sửa:',
         input: 'password',
         inputPlaceholder: 'Nhập mật khẩu...',
+        allowOutsideClick: false,
+        inputAttributes: {
+            autocomplete: 'current-password',
+            autocapitalize: 'none',
+            autocorrect: 'off',
+            spellcheck: 'false',
+            inputmode: 'text'
+        },
+        didOpen: () => {
+            const input = Swal.getInput();
+            if (input) {
+                input.disabled = false;
+                input.readOnly = false;
+                input.style.pointerEvents = 'auto';
+                input.focus({ preventScroll: true });
+            }
+        },
         showCancelButton: true,
         confirmButtonText: 'Mở Khóa',
         cancelButtonText: 'Hủy'
     });
-
     if (password === currentPass) {
         isAdmin = true;
         document.body.classList.remove('guest-mode');
